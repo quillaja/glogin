@@ -51,9 +51,14 @@ class GoogleModelBackend(object):
                 user = User.objects.create_user(idinfo['sub'], email=idinfo['email'])
                 user.first_name = idinfo['given_name']
                 user.last_name = idinfo['family_name']
-                user.image_url = idinfo['picture'] #TODO: not working...
                 user.set_unusable_password()
                 user.save()
+            
+            #TODO: not working. probably cause the instance is disappearing at some point
+            # between here and later.
+            #not a part of django's User model, but attach to the object
+            #user.image_url = idinfo['picture']
+            #setattr(user, 'image_url', idinfo['picture'])
                 
             return user
         
