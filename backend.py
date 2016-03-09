@@ -21,26 +21,26 @@ class GoogleModelBackend(object):
         except User.DoesNotExist:
             raise ValueError('user with pk= %s does not exist' % (user_primary_key))
     
-    def authenticate(self, token=None):
+    def authenticate(self, id_token=None):
         """
-        Takes an id token given to the app by Google, fetches data using it,
+        Takes a user id token given to the app by Google, fetches data using it,
         verifies the data, then gets the User from the database or, if the user
         does not exist, creates a new User with the info fetched from Google.
         Returns a User instance or None.
         """
         
         try:
-            if not token:
-                raise ValueError('Argument "token" cannot be None.')
+            if not id_token:
+                raise ValueError('Argument "id_token" cannot be None.')
             
-            idinfo = client.verify_id_token(token, settings.GOOGLE_OAUTH2_CLIENT_ID_WEB)
+            idinfo = client.verify_id_token(id_token, settings.GOOGLE_OAUTH2_CLIENT_ID_WEB)
             # If multiple clients access the backend server:
             if idinfo['aud'] not in [settings.GOOGLE_OAUTH2_CLIENT_ID_WEB]:
                 raise crypt.AppIdentityError("Unrecognized client.")
             if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
                 raise crypt.AppIdentityError("Wrong issuer.")
             
-            #if passes these checks, then username is in 'sub'
+            #if passes the above checks, then username is in 'sub'
             try:
                 user = User.objects.get(username=idinfo['sub'])
             except User.DoesNotExist:
@@ -51,6 +51,14 @@ class GoogleModelBackend(object):
                 user = User.objects.create_user(idinfo['sub'], email=idinfo['email'])
                 user.first_name = idinfo['given_name']
                 user.last_name = idinfo['family_name']
+                
+                # populate google profile info
+                user.google.given_name = user.first_name
+                user.google.family_name = user.last_name
+                user.google.email = user.email
+                user.google.picture = idinfo['picture']
+                user.google.locale = idinfo['locale']
+                
                 user.set_unusable_password()
                 user.save()
             
