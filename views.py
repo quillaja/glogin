@@ -14,7 +14,7 @@ def glogin(request):
     if request.method == 'POST':
         try:
             #get google token and authenticate.
-            user = authenticate(token=request.POST['id_token'])
+            user = authenticate(id_token=request.POST['id_token'])
             if user:
                 #user exists
                 login(request, user)

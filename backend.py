@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.conf import settings
 from oauth2client import client, crypt
+from models import Google
 
 class GoogleModelBackend(object):
     """
@@ -51,22 +52,18 @@ class GoogleModelBackend(object):
                 user = User.objects.create_user(idinfo['sub'], email=idinfo['email'])
                 user.first_name = idinfo['given_name']
                 user.last_name = idinfo['family_name']
-                
-                # populate google profile info
-                user.google.given_name = user.first_name
-                user.google.family_name = user.last_name
-                user.google.email = user.email
-                user.google.picture = idinfo['picture']
-                user.google.locale = idinfo['locale']
-                
                 user.set_unusable_password()
                 user.save()
-            
-            #TODO: not working. probably cause the instance is disappearing at some point
-            # between here and later.
-            #not a part of django's User model, but attach to the object
-            #user.image_url = idinfo['picture']
-            #setattr(user, 'image_url', idinfo['picture'])
+                
+                # populate google profile info
+                guser = Google(user=user)
+                guser.given_name = user.first_name
+                guser.family_name = user.last_name
+                guser.email = user.email
+                guser.picture = idinfo['picture']
+                guser.locale = idinfo['locale']  
+                guser.save()
+                
                 
             return user
         

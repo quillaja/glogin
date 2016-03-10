@@ -11,10 +11,10 @@ class Google(models.Model):
     unique to here. Of these, "picture" is the most useful, as it is an url to the user's
     Google profile image.
     """
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     email = models.EmailField()
     given_name = models.CharField(max_length=256)
     family_name = models.CharField(max_length=256)
-    picture = models.UrlField(max_length=512)
+    picture = models.URLField(max_length=512)
     locale = models.CharField(max_length=16)
     
